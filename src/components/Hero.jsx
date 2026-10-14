@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, FileText, Sparkles } from 'lucide-react';
+import { Eye, FileText } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 
 export default function Hero({ onOpenResume }) {
@@ -61,13 +61,6 @@ export default function Hero({ onOpenResume }) {
           {/* Left Column: Seamless Transparent Content over Background Video */}
           <div className="lg:col-span-7 xl:col-span-6 space-y-6">
             <div className="space-y-6 animate-fadeIn">
-              
-              {/* Status Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-wider uppercase w-fit">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Full-Stack & UI/UX Specialist</span>
-              </div>
 
               {/* Name & Role */}
               <div className="space-y-2">
