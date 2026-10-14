@@ -1,32 +1,11 @@
-import React, { useRef, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, ArrowDown, Eye, FileText, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Eye, FileText, Sparkles } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 
 export default function Hero({ onOpenResume }) {
-  const videoRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
   const [reduceMotion] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
 
   const handleScrollToProjects = (e) => {
     e.preventDefault();
@@ -43,7 +22,6 @@ export default function Hero({ onOpenResume }) {
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
         {!reduceMotion ? (
           <video
-            ref={videoRef}
             src={personalInfo.heroVideo}
             autoPlay
             loop
@@ -150,46 +128,6 @@ export default function Hero({ onOpenResume }) {
           <div className="hidden lg:block lg:col-span-5 xl:col-span-6"></div>
 
         </div>
-      </div>
-
-      {/* FLOATING VIDEO CONTROLS WIDGET (BOTTOM RIGHT) */}
-      {!reduceMotion && (
-        <div className="absolute bottom-6 right-6 z-20 flex items-center gap-2">
-        <button
-          onClick={togglePlay}
-          aria-label={isPlaying ? "Pause video" : "Play video"}
-          className="p-2.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-lg"
-          title={isPlaying ? "Pause background video" : "Play background video"}
-        >
-          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-amber-400" />}
-        </button>
-        <button
-          onClick={toggleMute}
-          aria-label={isMuted ? "Unmute video" : "Mute video"}
-          className="p-2.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30 hover:bg-amber-500 hover:text-slate-950 transition-all shadow-lg"
-          title={isMuted ? "Unmute video audio" : "Mute video audio"}
-        >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </button>
-        </div>
-      )}
-
-      {/* SCROLL INDICATOR */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-        <a
-          href="#about"
-          onClick={(e) => {
-            e.preventDefault();
-            document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          aria-label="Scroll down to About section"
-          className="flex flex-col items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-amber-400 transition-colors group"
-        >
-          <span className="uppercase tracking-widest text-[10px]">Scroll Down</span>
-          <div className="p-1.5 rounded-full glass-panel border-amber-500/30 text-amber-400 group-hover:translate-y-1 transition-transform">
-            <ArrowDown className="w-4 h-4 animate-bounce" />
-          </div>
-        </a>
       </div>
 
     </section>
