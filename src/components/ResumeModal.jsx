@@ -1,12 +1,34 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Download, ExternalLink, FileText, Sparkles } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 
 export default function ResumeModal({ isOpen, onClose }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Resume PDF viewer"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="glass-panel w-full max-w-5xl h-[85vh] rounded-3xl border-amber-500/40 shadow-2xl flex flex-col overflow-hidden bg-[var(--bg-primary)]">
         
         {/* Modal Header */}

@@ -6,6 +6,9 @@ export default function Hero({ onOpenResume }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
+  const [reduceMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -38,15 +41,26 @@ export default function Hero({ onOpenResume }) {
       
       {/* FULL-HEIGHT BACKGROUND VIDEO WITH PRECISE POSITIONING TO KEEP FACE CLEAR */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
-        <video
-          ref={videoRef}
-          src={personalInfo.heroVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover object-[75%_center] sm:object-[80%_center] scale-105 transform transition-transform duration-1000"
-        />
+        {!reduceMotion ? (
+          <video
+            ref={videoRef}
+            src={personalInfo.heroVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            poster="/images/novachat.jpg"
+            className="w-full h-full object-cover object-[75%_center] sm:object-[80%_center] scale-105 transform transition-transform duration-1000"
+          />
+        ) : (
+          <img
+            src="/images/novachat.jpg"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover object-[75%_center]"
+          />
+        )}
 
         {/* Directional Overlay: Dark on the Left (for text readability), Transparent on the Right (keeping face open & clear) */}
         {/* Top Dark Overlay for Navigation Bar */}
@@ -139,7 +153,8 @@ export default function Hero({ onOpenResume }) {
       </div>
 
       {/* FLOATING VIDEO CONTROLS WIDGET (BOTTOM RIGHT) */}
-      <div className="absolute bottom-6 right-6 z-20 flex items-center gap-2">
+      {!reduceMotion && (
+        <div className="absolute bottom-6 right-6 z-20 flex items-center gap-2">
         <button
           onClick={togglePlay}
           aria-label={isPlaying ? "Pause video" : "Play video"}
@@ -156,7 +171,8 @@ export default function Hero({ onOpenResume }) {
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
-      </div>
+        </div>
+      )}
 
       {/* SCROLL INDICATOR */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">

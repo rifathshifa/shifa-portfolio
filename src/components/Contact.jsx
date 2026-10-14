@@ -6,23 +6,57 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: ''
   });
 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const formspreeId = import.meta.env.VITE_FORMSPREE_ID || '';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
+    // Honeypot: bots fill this hidden field
+    if (e.target.company && e.target.company.value) return;
 
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    // If no Formspree ID is configured, fall back to opening the user's mail client
+    if (!formspreeId) {
+      const mailto = `mailto:${personalInfo.email}?subject=${encodeURIComponent(
+        formData.subject || `Portfolio inquiry from ${formData.name}`
+      )}&body=${encodeURIComponent(`${formData.message}\n\n— ${formData.name} (${formData.email})`)}`;
+      window.location.href = mailto;
       setLoading(false);
       setSubmitted(true);
-      setFormData({ name: '', email: '', message: '' });
-      setTimeout(() => setSubmitted(false), 5000);
-    }, 800);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setSubmitted(false), 8000);
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://formspree.io/f/${formspreeId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message
+        })
+      });
+      if (!res.ok) throw new Error('Send failed');
+      setSubmitted(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setSubmitted(false), 8000);
+    } catch {
+      setError('Could not send just now. Please email me directly at ' + personalInfo.email);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -157,11 +191,24 @@ export default function Contact() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Honeypot for spam bots */}
+                  <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+                  {error && (
+                    <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold">
+                      {error}
+                    </div>
+                  )}
+                  {!formspreeId && (
+                    <p className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
+                      Direct-email mode: submitting opens your mail app. Add VITE_FORMSPREE_ID in .env to enable one-click sending.
+                    </p>
+                  )}
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
+                    <label htmlFor="contact-name" className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
                       Your Name
                     </label>
                     <input
+                      id="contact-name"
                       type="text"
                       required
                       placeholder="Enter your name"
@@ -172,10 +219,11 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
+                    <label htmlFor="contact-email" className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
                       Your Email
                     </label>
                     <input
+                      id="contact-email"
                       type="email"
                       required
                       placeholder="Enter your email address"
@@ -186,10 +234,25 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
+                    <label htmlFor="contact-subject" className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
+                      Subject
+                    </label>
+                    <input
+                      id="contact-subject"
+                      type="text"
+                      placeholder="Project, internship, freelance…"
+                      value={formData.subject}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl glass-panel text-sm text-[var(--text-primary)] focus:outline-none focus:border-amber-500 placeholder:text-[var(--text-muted)] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="contact-message" className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">
                       Message
                     </label>
                     <textarea
+                      id="contact-message"
                       required
                       rows={5}
                       placeholder="Type your message here..."

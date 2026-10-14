@@ -29,8 +29,8 @@
   --card-border: rgba(217, 119, 6, 0.22);
   --card-hover-border: rgba(217, 119, 6, 0.55);
   --text-primary: #1e1b18;
-  --text-secondary: #4a453e;
-  --text-muted: #78716c;
+  --text-secondary: #3f3a33;
+  --text-muted: #6b655c;
   --accent-amber: #d97706;
   --accent-amber-glow: rgba(217, 119, 6, 0.22);
   --accent-warm: #b45309;
@@ -166,6 +166,53 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .section-padding {
   padding-top: 5rem;
   padding-bottom: 5rem;
+}
+
+/* Fixed-header anchor offset for all sections */
+section[id] {
+  scroll-margin-top: 84px;
+}
+
+/* Unified primary button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(to right, var(--accent-amber), var(--accent-warm));
+  color: #020617;
+  font-weight: 800;
+  box-shadow: 0 10px 25px -10px var(--accent-amber-glow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px -10px var(--accent-amber-glow);
+}
+
+/* Scroll-reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .animate-fadeIn {
+    animation: none;
+  }
 }
 
 @media (min-width: 768px) {

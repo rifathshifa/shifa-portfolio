@@ -124,6 +124,8 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
             className="p-2 rounded-xl glass-panel text-amber-500 focus:outline-none"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -133,7 +135,7 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
 
       {/* Mobile Slide-down Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden mt-3 px-4 pt-2 pb-6 bg-[var(--navbar-bg)] backdrop-blur-xl border-b border-[var(--card-border)] animate-fadeIn">
+        <div id="mobile-menu" className="lg:hidden mt-3 px-4 pt-2 pb-6 bg-[var(--navbar-bg)] backdrop-blur-xl border-b border-[var(--card-border)] animate-fadeIn">
           <div className="flex flex-col space-y-1">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href.substring(1);

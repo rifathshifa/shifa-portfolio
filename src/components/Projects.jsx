@@ -6,6 +6,32 @@ export default function Projects() {
   const [showAll, setShowAll] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
 
+  const isValidLiveUrl = (url) => {
+    if (!url) return false;
+    try {
+      const u = new URL(url);
+      if (u.protocol !== 'https:') return false;
+      // Reject URL shorteners used as placeholders — replace with direct deploy URLs
+      if (u.hostname.includes('lnkd.in') || u.hostname.includes('bit.ly')) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const isValidGithubUrl = (url) => {
+    if (!url) return false;
+    try {
+      const u = new URL(url);
+      if (!u.hostname.includes('github.com')) return false;
+      // Profile root (e.g. /rifathshifa/) has no repo — hide button until specific repo is added
+      const parts = u.pathname.split('/').filter(Boolean);
+      return parts.length >= 2;
+    } catch {
+      return false;
+    }
+  };
+
   const categories = ['All', 'Full Stack', 'Frontend & React', 'UI/UX & Web', 'Web App', 'Games & Utilities'];
 
   const displayedProjects = projectsData.filter((p) => {
@@ -67,12 +93,24 @@ export default function Projects() {
               <div>
                 {/* Project Image Showcase Container */}
                 <div className="relative aspect-video overflow-hidden bg-slate-950">
-                  <img
-                    src={project.image}
-                    alt={project.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
+                  {project.image ? (
+                    <img
+                      src={project.image}
+                      alt={project.name}
+                      width={1200}
+                      height={675}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-amber-500/25 via-slate-900 to-slate-950 p-6 text-center">
+                      <span className="text-3xl font-black font-heading text-amber-400">
+                        {project.name.charAt(0)}
+                      </span>
+                      <span className="text-xs font-bold text-slate-300">{project.name}</span>
+                      <span className="text-[10px] font-mono text-amber-500/80">Live demo verified ✓</span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
                   
                   {/* Category Pill */}
@@ -81,15 +119,17 @@ export default function Projects() {
                   </div>
 
                   {/* Quick Action overlay button */}
-                  <a
-                    href={project.liveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute top-3 right-3 p-2 rounded-xl bg-amber-500 text-slate-950 font-bold opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all shadow-md"
-                    title="Open Live Demo"
-                  >
-                    <ArrowUpRight className="w-5 h-5" />
-                  </a>
+                  {isValidLiveUrl(project.liveUrl) && (
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-3 right-3 p-2 rounded-xl bg-amber-500 text-slate-950 font-bold opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all shadow-md"
+                      title="Open Live Demo"
+                    >
+                      <ArrowUpRight className="w-5 h-5" />
+                    </a>
+                  )}
                 </div>
 
                 {/* Card Content Body */}
@@ -122,17 +162,23 @@ export default function Projects() {
 
               {/* Card Footer Actions */}
               <div className="p-6 pt-0 border-t border-[var(--card-border)]/50 mt-4 flex items-center justify-between gap-3">
-                <a
-                  href={project.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-shine px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Live Demo
-                </a>
+                {isValidLiveUrl(project.liveUrl) ? (
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-shine px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Live Demo
+                  </a>
+                ) : (
+                  <span className="px-4 py-2 rounded-xl text-xs font-bold text-[var(--text-muted)] border border-dashed border-[var(--card-border)]">
+                    Demo on request
+                  </span>
+                )}
 
-                {project.githubUrl && (
+                {isValidGithubUrl(project.githubUrl) && (
                   <a
                     href={project.githubUrl}
                     target="_blank"
