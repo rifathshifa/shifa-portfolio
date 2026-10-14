@@ -6,6 +6,7 @@ export default function Hero({ onOpenResume }) {
   const [reduceMotion] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
+  const [videoReady, setVideoReady] = useState(false);
 
   const handleScrollToProjects = (e) => {
     e.preventDefault();
@@ -19,7 +20,7 @@ export default function Hero({ onOpenResume }) {
     <section id="home" className="relative w-full min-h-screen flex items-center overflow-hidden bg-[var(--bg-primary)]">
       
       {/* FULL-HEIGHT BACKGROUND VIDEO WITH PRECISE POSITIONING TO KEEP FACE CLEAR */}
-      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-[var(--bg-primary)]">
         {!reduceMotion ? (
           <video
             src={personalInfo.heroVideo}
@@ -27,9 +28,9 @@ export default function Hero({ onOpenResume }) {
             loop
             muted
             playsInline
-            preload="metadata"
-            poster="/images/novachat.jpg"
-            className="w-full h-full object-cover object-[75%_center] sm:object-[80%_center] scale-105 transform transition-transform duration-1000"
+            preload="auto"
+            onCanPlay={() => setVideoReady(true)}
+            className={`w-full h-full object-cover object-[75%_center] sm:object-[80%_center] scale-105 transform transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
           />
         ) : (
           <img
