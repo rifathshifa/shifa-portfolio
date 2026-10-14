@@ -40,18 +40,29 @@ export default function Hero({ onOpenResume }) {
           />
         )}
 
-        {/* Directional Overlay: Dark on the Left (for text readability), Transparent on the Right (keeping face open & clear) */}
-        {/* Top Dark Overlay for Navigation Bar */}
+        {/* Cinematic dark hero in BOTH themes: video is dark, so text stays white for contrast.
+            Only the bottom fade adapts to the next section's bg. */}
+        {/* Top veil for Navigation Bar */}
         <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-slate-950/90 via-slate-950/50 to-transparent pointer-events-none"></div>
 
-        {/* Left-to-Right Gradient Mask (Heavy dark on left for text, completely clear on right for face) */}
+        {/* Left-to-Right Gradient Mask (heavy veil on left for text, clear on right for face) */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 sm:via-slate-950/65 to-transparent pointer-events-none"></div>
 
-        {/* Bottom Blend Gradient into About Section */}
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--bg-secondary)] via-slate-950/70 to-transparent pointer-events-none"></div>
+        {/* Bottom finish: keep it dark in BOTH themes so no white fog
+            washes over the video. The paper body starts crisply below
+            via the curve divider, not as a haze on top of the face. */}
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-slate-950 via-slate-950/75 to-transparent pointer-events-none"></div>
 
         {/* Subtle Ambient Sunlight Glow on Left */}
         <div className="ambient-glow w-[500px] h-[500px] bg-amber-500/10 top-1/2 left-10 -translate-y-1/2 pointer-events-none"></div>
+      </div>
+
+      {/* Crisp editorial cut into the body: dark hero ends, paper begins.
+          A solid curve — no milky mid-tones over the video content. */}
+      <div className="absolute bottom-[-1px] inset-x-0 z-[5] leading-[0] pointer-events-none" aria-hidden="true">
+        <svg viewBox="0 0 1440 90" preserveAspectRatio="none" className="w-full h-[56px] sm:h-[72px] block">
+          <path d="M0,58 C360,105 1080,5 1440,52 L1440,90 L0,90 Z" fill="var(--bg-secondary)" />
+        </svg>
       </div>
 
       {/* FOREGROUND CONTENT: LEFT-ALIGNED HERO PANEL (KEEPING RIGHT SIDE CLEAR FOR FACE) */}
@@ -67,13 +78,13 @@ export default function Hero({ onOpenResume }) {
                 <h1 className="text-4xl sm:text-5xl font-extrabold font-heading tracking-tight text-white leading-tight">
                   {personalInfo.name}
                 </h1>
-                <span className="gradient-accent-text block text-2xl sm:text-3xl font-bold tracking-tight">
+                <span className="block text-2xl sm:text-3xl font-bold tracking-tight text-amber-400">
                   {personalInfo.role}
                 </span>
               </div>
 
               {/* Tagline */}
-              <p className="text-lg sm:text-xl font-serif italic text-amber-300/90 font-medium">
+              <p className="text-lg sm:text-xl font-serif italic text-amber-200/90 font-medium">
                 “{personalInfo.tagline}”
               </p>
 
@@ -87,7 +98,7 @@ export default function Hero({ onOpenResume }) {
                 {['React.js', 'Flask', 'WebRTC', 'Socket.IO', 'PostgreSQL', 'Figma'].map((tech) => (
                   <span
                     key={tech}
-                    className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm"
+                    className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-200 border border-amber-500/30 shadow-sm"
                   >
                     {tech}
                   </span>
@@ -107,7 +118,7 @@ export default function Hero({ onOpenResume }) {
 
                 <button
                   onClick={onOpenResume}
-                  className="px-7 py-3.5 rounded-xl glass-panel text-white hover:text-amber-400 hover:border-amber-500/50 font-bold text-sm sm:text-base hover:-translate-y-0.5 transition-all flex items-center gap-2 bg-slate-900/80"
+                  className="px-7 py-3.5 rounded-xl bg-slate-950/60 backdrop-blur-md border border-white/20 text-white hover:text-amber-300 hover:border-amber-500/50 font-bold text-sm sm:text-base hover:-translate-y-0.5 transition-all flex items-center gap-2"
                 >
                   <FileText className="w-5 h-5 text-amber-400" />
                   View Resume

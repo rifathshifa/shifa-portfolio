@@ -4,12 +4,17 @@ import { navLinks, personalInfo } from '../data/portfolioData';
 
 export default function Navbar({ theme, toggleTheme, onOpenResume }) {
   const [scrolled, setScrolled] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      // Hero is ~100vh: keep navbar dark while over the black video,
+      // switch to theme paper only once past it. This removes the
+      // black-bar-over-white-body contradiction in light mode.
+      setPastHero(window.scrollY > window.innerHeight * 0.8);
 
       // ScrollSpy logic
       const sections = navLinks.map(link => link.href.substring(1));
@@ -42,12 +47,19 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
     }
   };
 
+  // Over the dark hero video the navbar must stay dark in BOTH themes.
+  // Only after scrolling past the hero does it adopt the theme paper.
+  const useDarkChrome = !pastHero;
+  const showThemeChrome = scrolled && pastHero;
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
+        showThemeChrome
           ? 'py-3 bg-[var(--navbar-bg)] backdrop-blur-md border-b border-[var(--card-border)] shadow-lg'
-          : 'py-5 bg-transparent'
+          : scrolled
+            ? 'py-3 bg-slate-950/70 backdrop-blur-md border-b border-white/10 shadow-lg'
+            : 'py-5 bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -61,7 +73,7 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
             RS
           </div>
           <div className="flex flex-col">
-            <span className="leading-none text-slate-100 font-extrabold group-hover:text-amber-400 transition-colors" style={{ color: 'var(--text-primary)' }}>
+            <span className="leading-none font-extrabold group-hover:text-amber-400 transition-colors" style={{ color: useDarkChrome || !showThemeChrome ? '#f8fafc' : 'var(--text-primary)' }}>
               RIFATH SHIFA
             </span>
             <span className="text-[10px] tracking-wider text-amber-500 font-semibold uppercase">
@@ -70,7 +82,7 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
           </div>
         </a>
 
-        {/* Desktop Navigation Links */}
+        {/* Desktop Navigation Links — dark chrome over hero, theme vars after hero */}
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {navLinks.map((link) => {
             const isActive = activeSection === link.href.substring(1);
@@ -81,8 +93,10 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
                 onClick={(e) => handleNavClick(e, link.href)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'text-amber-500 bg-amber-500/10 border border-amber-500/30'
-                    : 'text-[var(--text-secondary)] hover:text-amber-400 hover:bg-amber-500/5'
+                    ? 'text-amber-400 bg-amber-500/10 border border-amber-500/30'
+                    : showThemeChrome
+                      ? 'text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5'
+                      : 'text-slate-300 hover:text-amber-300 hover:bg-white/5'
                 }`}
               >
                 {link.name}
@@ -96,7 +110,11 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="p-2.5 rounded-xl glass-panel text-amber-500 hover:text-amber-400 hover:scale-105 transition-all"
+            className={`p-2.5 rounded-xl border transition-all hover:scale-105 ${
+              showThemeChrome
+                ? 'glass-panel text-amber-500 hover:text-amber-400'
+                : 'bg-white/10 border-white/15 text-amber-400 hover:text-amber-300 backdrop-blur-md'
+            }`}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? <Sun className="w-5 h-5 animate-pulse-slow" /> : <Moon className="w-5 h-5" />}
@@ -116,7 +134,11 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="p-2 rounded-xl glass-panel text-amber-500"
+            className={`p-2 rounded-xl border ${
+              showThemeChrome
+                ? 'glass-panel text-amber-500'
+                : 'bg-white/10 border-white/15 text-amber-400 backdrop-blur-md'
+            }`}
           >
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
@@ -126,7 +148,11 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
             aria-label="Toggle mobile menu"
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"
-            className="p-2 rounded-xl glass-panel text-amber-500 focus:outline-none"
+            className={`p-2 rounded-xl border focus:outline-none ${
+              showThemeChrome
+                ? 'glass-panel text-amber-500'
+                : 'bg-white/10 border-white/15 text-amber-400 backdrop-blur-md'
+            }`}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
