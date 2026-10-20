@@ -148,7 +148,7 @@ export const projectsData = [
     technologies: ["Next.js", "Prisma", "QR", "Vercel"],
     liveUrl: "https://hackathon-ashen-phi.vercel.app",
     githubUrl: "https://github.com/rifathshifa/hackathon",
-    image: "",
+    image: "/images/equipx.jpg",
     featured: true,
     category: "Full Stack"
   },
@@ -160,7 +160,7 @@ export const projectsData = [
     technologies: ["React.js", "Vite", "Tailwind CSS"],
     liveUrl: "https://zayans-trust.vercel.app",
     githubUrl: "https://github.com/rifathshifa/zayans-trust",
-    image: "",
+    image: "/images/zayans_trust.jpg",
     featured: true,
     category: "Frontend & React"
   },
@@ -172,7 +172,7 @@ export const projectsData = [
     technologies: ["React.js", "Vite", "CSS3"],
     liveUrl: "https://titan-lake.vercel.app",
     githubUrl: "https://github.com/rifathshifa/titan",
-    image: "",
+    image: "/images/titan.jpg",
     featured: false,
     category: "UI/UX & Web"
   },
@@ -184,7 +184,7 @@ export const projectsData = [
     technologies: ["HTML5", "CSS3", "JavaScript"],
     liveUrl: "https://coffeeshop-60064450750.development.catalystserverless.in/app/index.html",
     githubUrl: "",
-    image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1200&auto=format&fit=crop",
+    image: "/images/coffee_shop.jpg",
     featured: false,
     category: "Frontend"
   },
@@ -196,7 +196,7 @@ export const projectsData = [
     technologies: ["JavaScript", "REST API", "HTML5", "CSS3"],
     liveUrl: "https://weather-app-60064450750.development.catalystserverless.in/app/index.html",
     githubUrl: "",
-    image: "https://images.unsplash.com/photo-1592210454359-9043f067919b?q=80&w=1200&auto=format&fit=crop",
+    image: "/images/weather_app.jpg",
     featured: false,
     category: "Web App"
   },
@@ -208,7 +208,7 @@ export const projectsData = [
     technologies: ["JavaScript", "HTML5 Canvas", "CSS3"],
     liveUrl: "https://snakegame-one-omega.vercel.app/",
     githubUrl: "",
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop",
+    image: "/images/snake_game.jpg",
     featured: false,
     category: "Games & Utilities"
   },
@@ -220,7 +220,7 @@ export const projectsData = [
     technologies: ["JavaScript", "HTML5 Audio", "CSS3"],
     liveUrl: "https://digital-alarm-60064450750.development.catalystserverless.in/app/index.html",
     githubUrl: "",
-    image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1200&auto=format&fit=crop",
+    image: "/images/digital_alarm.jpg",
     featured: false,
     category: "Games & Utilities"
   }

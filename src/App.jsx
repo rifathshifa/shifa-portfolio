@@ -12,16 +12,31 @@ import ResumeSection from './components/ResumeSection';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import ResumeModal from './components/ResumeModal';
+import InteractiveIntro from './components/InteractiveIntro';
+import AnimatedBackground from './components/AnimatedBackground';
 import useReveal from './hooks/useReveal';
 
 export default function App() {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('portfolio_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        return 'light';
+      }
+    }
+    return 'dark';
+  });
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
   useReveal();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('portfolio_theme', theme);
+    }
   }, [theme]);
 
   // Re-run reveal for dynamically shown projects
@@ -52,11 +67,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen relative flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
+      {/* Subtle Premium Animated Background (Lavender, Pastel Pink & Cream Orbs + Floating Particles + Mouse Glow) */}
+      <AnimatedBackground theme={theme} />
+
+      {/* Interactive Fullscreen Intro Sequence */}
+      {showIntro && (
+        <InteractiveIntro
+          onComplete={() => setShowIntro(false)}
+        />
+      )}
+
       {/* Navigation */}
       <Navbar
         theme={theme}
         toggleTheme={toggleTheme}
         onOpenResume={() => setIsResumeModalOpen(true)}
+        onReplayIntro={() => setShowIntro(true)}
       />
 
       {/* Main Page Sections */}

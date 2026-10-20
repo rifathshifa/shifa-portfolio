@@ -94,17 +94,7 @@ export default function Hero({ onOpenResume }) {
                 Crafting end-to-end web applications with React.js, Flask, PostgreSQL, WebSocket, and WebRTC — seamlessly combining technical engineering with elegant UI/UX design.
               </p>
 
-              {/* Skill Pill Badges */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {['React.js', 'Flask', 'WebRTC', 'Socket.IO', 'PostgreSQL', 'Figma'].map((tech) => (
-                  <span
-                    key={tech}
-                    className="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-200 border border-amber-500/30 shadow-sm"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
+
 
               {/* CTA Action Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-3">

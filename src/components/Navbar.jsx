@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Menu, X, Sparkles, Code2 } from 'lucide-react';
+import { Sun, Moon, Menu, X, Sparkles, Code2, RotateCcw } from 'lucide-react';
 import { navLinks, personalInfo } from '../data/portfolioData';
 
-export default function Navbar({ theme, toggleTheme, onOpenResume }) {
+export default function Navbar({ theme, toggleTheme, onOpenResume, onReplayIntro }) {
   const [scrolled, setScrolled] = useState(false);
   const [pastHero, setPastHero] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -120,6 +120,21 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
             {theme === 'dark' ? <Sun className="w-5 h-5 animate-pulse-slow" /> : <Moon className="w-5 h-5" />}
           </button>
 
+          {onReplayIntro && (
+            <button
+              onClick={onReplayIntro}
+              aria-label="Replay intro animation"
+              title="Replay Intro"
+              className={`p-2.5 rounded-xl border transition-all ${
+                showThemeChrome
+                  ? 'glass-panel text-[var(--text-secondary)] hover:text-amber-500 hover:border-amber-500/40'
+                  : 'bg-white/10 border-white/15 text-slate-300 hover:text-amber-400 hover:bg-white/15 backdrop-blur-md'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             onClick={onOpenResume}
             className="btn-shine px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm shadow-md hover:shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-1.5"
@@ -131,6 +146,21 @@ export default function Navbar({ theme, toggleTheme, onOpenResume }) {
 
         {/* Mobile controls & Hamburger */}
         <div className="flex items-center gap-2 lg:hidden">
+          {onReplayIntro && (
+            <button
+              onClick={onReplayIntro}
+              aria-label="Replay intro animation"
+              title="Replay Intro"
+              className={`p-2 rounded-xl border ${
+                showThemeChrome
+                  ? 'glass-panel text-amber-500'
+                  : 'bg-white/10 border-white/15 text-amber-400 backdrop-blur-md'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
