@@ -28,7 +28,13 @@ export default function App() {
     return 'dark';
   });
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => {
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem('portfolio_intro_seen') === 'true') return false;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    }
+    return true;
+  });
 
   useReveal();
 
@@ -38,28 +44,6 @@ export default function App() {
       localStorage.setItem('portfolio_theme', theme);
     }
   }, [theme]);
-
-  // Re-run reveal for dynamically shown projects
-  useEffect(() => {
-    const els = document.querySelectorAll('.reveal:not(.is-visible)');
-    if (!('IntersectionObserver' in window)) {
-      els.forEach((el) => el.classList.add('is-visible'));
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12 }
-    );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  });
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));

@@ -68,29 +68,16 @@ export const skillsData = [
 
 export const projectsData = [
   {
-    id: "novachat",
-    name: "NovaChat",
-    subtitle: "Real-Time Full Stack Chat Application",
-    description: "Problem: teams needed secure low-latency chat with calls. Built one-to-one messaging, voice messages, voice/video calls, file sharing, JWT auth, REST APIs, and Socket.IO + WebRTC. PostgreSQL-backed with responsive UI.",
-    technologies: ["React.js", "Flask", "Socket.IO", "WebRTC", "PostgreSQL", "JWT", "REST API"],
-    liveUrl: "https://nova-chat-uz5z.onrender.com",
-    linkedinLive: "https://lnkd.in/gmk9AGgC",
-    githubUrl: "https://github.com/rifathshifa/novachat",
-    image: "/images/novachat.jpg",
+    id: "titan",
+    name: "TITAN",
+    subtitle: "Horology Showcase — Art of Time",
+    description: "Problem: luxury watches need cinematic presentation. Built a Vite showcase with rich visuals and smooth motion for horological storytelling.",
+    technologies: ["React.js", "Vite", "CSS3"],
+    liveUrl: "https://titan-lake.vercel.app",
+    githubUrl: "https://github.com/rifathshifa/titan",
+    image: "/images/titan.jpg",
     featured: true,
-    category: "Full Stack"
-  },
-  {
-    id: "bmi-calculator",
-    name: "BMI Calculator & Medical Hub",
-    subtitle: "React.js Healthcare Utility Platform",
-    description: "Problem: quick health checks were scattered. Built BMI, BP, sugar, heart-rate, calorie, water, and sleep calculators plus medicine reminders, symptom checker, and first-aid guide in React.",
-    technologies: ["React.js", "JavaScript", "CSS3", "Bootstrap", "REST API"],
-    liveUrl: "https://bm-icalculator-tan.vercel.app/",
-    githubUrl: "https://github.com/rifathshifa/BMIcalculator",
-    image: "/images/medical_hub.jpg",
-    featured: true,
-    category: "Frontend & React"
+    category: "UI/UX & Web"
   },
   {
     id: "juicely",
@@ -105,40 +92,17 @@ export const projectsData = [
     category: "UI/UX & Web"
   },
   {
-    id: "tourist-website",
-    name: "Tourist Website",
-    subtitle: "Interactive Travel Destination Explorer",
-    description: "Problem: travelers struggled to compare itineraries. Built a curated explorer with trip itineraries, booking UI, and location filters in a fully responsive layout.",
-    technologies: ["HTML5", "CSS3", "JavaScript", "Bootstrap"],
-    liveUrl: "https://touristapp-60064450750.development.catalystserverless.in/app/index.html",
-    githubUrl: "",
-    image: "/images/tourist.jpg",
-    featured: true,
-    category: "Frontend"
-  },
-  {
-    id: "shopping-app",
-    name: "Shopping Web Application",
-    subtitle: "E-Commerce Retail Platform",
-    description: "Problem: small retailers needed a simple storefront. Built dynamic listings, category filters, cart state management, and a streamlined checkout UI.",
-    technologies: ["React.js", "JavaScript", "REST API", "CSS3"],
-    liveUrl: "https://shopping-app-60064450750.development.catalystserverless.in/app/index.html",
-    githubUrl: "https://github.com/rifathshifa/Rifath-Shifa",
-    image: "/images/shopping_app.jpg",
+    id: "novachat",
+    name: "NovaChat",
+    subtitle: "Real-Time Full Stack Chat Application",
+    description: "Problem: teams needed secure low-latency chat with calls. Built one-to-one messaging, voice messages, voice/video calls, file sharing, JWT auth, REST APIs, and Socket.IO + WebRTC. PostgreSQL-backed with responsive UI.",
+    technologies: ["React.js", "Flask", "Socket.IO", "WebRTC", "PostgreSQL", "JWT", "REST API"],
+    liveUrl: "https://nova-chat-uz5z.onrender.com",
+    linkedinLive: "https://lnkd.in/gmk9AGgC",
+    githubUrl: "https://github.com/rifathshifa/novachat",
+    image: "/images/novachat.jpg",
     featured: true,
     category: "Full Stack"
-  },
-  {
-    id: "billing-software",
-    name: "Billing Software",
-    subtitle: "Smart Invoicing & Business Dashboard",
-    description: "Problem: shops wasted time on manual bills. Built instant invoice generation with auto calculations, itemized tracking, and downloadable receipts using LocalStorage.",
-    technologies: ["JavaScript", "HTML5", "CSS3", "LocalStorage"],
-    liveUrl: "https://billing-software-60064450750.development.catalystserverless.in/app/index.html",
-    githubUrl: "https://github.com/rifathshifa/Rifath-Shifa",
-    image: "/images/billing_software.jpg",
-    featured: true,
-    category: "Web App"
   },
   {
     id: "equipx",
@@ -165,16 +129,52 @@ export const projectsData = [
     category: "Frontend & React"
   },
   {
-    id: "titan",
-    name: "TITAN",
-    subtitle: "Horology Showcase — Art of Time",
-    description: "Problem: luxury watches need cinematic presentation. Built a Vite showcase with rich visuals and smooth motion for horological storytelling.",
-    technologies: ["React.js", "Vite", "CSS3"],
-    liveUrl: "https://titan-lake.vercel.app",
-    githubUrl: "https://github.com/rifathshifa/titan",
-    image: "/images/titan.jpg",
+    id: "tourist-website",
+    name: "Tourist Website",
+    subtitle: "Interactive Travel Destination Explorer",
+    description: "Problem: travelers struggled to compare itineraries. Built a curated explorer with trip itineraries, booking UI, and location filters in a fully responsive layout.",
+    technologies: ["HTML5", "CSS3", "JavaScript", "Bootstrap"],
+    liveUrl: "https://touristapp-60064450750.development.catalystserverless.in/app/index.html",
+    githubUrl: "",
+    image: "/images/tourist.jpg",
+    featured: true,
+    category: "Frontend"
+  },
+  {
+    id: "bmi-calculator",
+    name: "BMI Calculator & Medical Hub",
+    subtitle: "React.js Healthcare Utility Platform",
+    description: "Problem: quick health checks were scattered. Built BMI, BP, sugar, heart-rate, calorie, water, and sleep calculators plus medicine reminders, symptom checker, and first-aid guide in React.",
+    technologies: ["React.js", "JavaScript", "CSS3", "Bootstrap", "REST API"],
+    liveUrl: "https://bm-icalculator-tan.vercel.app/",
+    githubUrl: "https://github.com/rifathshifa/BMIcalculator",
+    image: "/images/medical_hub.jpg",
+    featured: true,
+    category: "Frontend & React"
+  },
+  {
+    id: "shopping-app",
+    name: "Shopping Web Application",
+    subtitle: "E-Commerce Retail Platform",
+    description: "Problem: small retailers needed a simple storefront. Built dynamic listings, category filters, cart state management, and a streamlined checkout UI.",
+    technologies: ["React.js", "JavaScript", "REST API", "CSS3"],
+    liveUrl: "https://shopping-app-60064450750.development.catalystserverless.in/app/index.html",
+    githubUrl: "https://github.com/rifathshifa/Rifath-Shifa",
+    image: "/images/shopping_app.jpg",
+    featured: true,
+    category: "Full Stack"
+  },
+  {
+    id: "billing-software",
+    name: "Billing Software",
+    subtitle: "Smart Invoicing & Business Dashboard",
+    description: "Problem: shops wasted time on manual bills. Built instant invoice generation with auto calculations, itemized tracking, and downloadable receipts using LocalStorage.",
+    technologies: ["JavaScript", "HTML5", "CSS3", "LocalStorage"],
+    liveUrl: "https://billing-software-60064450750.development.catalystserverless.in/app/index.html",
+    githubUrl: "https://github.com/rifathshifa/Rifath-Shifa",
+    image: "/images/billing_software.jpg",
     featured: false,
-    category: "UI/UX & Web"
+    category: "Web App"
   },
   {
     id: "coffee-shop",
@@ -257,7 +257,7 @@ export const educationData = [
     period: "2022 – 2023",
     score: "Percentage: 87.5%",
     badge: "Higher Secondary",
-    details: "Completed Higher Secondary with distinction in Mathematics, Computer Science, and Physical Sciences."
+    details: "Completed Higher Secondary with Distinction in Mathematics, Physics, Chemistry and Biology."
   }
 ];
 

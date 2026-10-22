@@ -143,6 +143,16 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
     if (phase === 'revealing' || phase === 'hidden') return;
     setPhase('revealing');
 
+    if (prefersReducedMotion) {
+      setCurtainDrag(viewport.width + 150);
+      setPhase('hidden');
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('portfolio_intro_seen', 'true');
+      }
+      if (onComplete) onComplete();
+      return;
+    }
+
     const totalWidth = viewport.width;
     const startDrag = currentDragRef.current;
     const targetDrag = totalWidth + 150;
@@ -171,7 +181,7 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
     };
 
     requestAnimationFrame(animateOut);
-  }, [phase, viewport.width, onComplete]);
+  }, [phase, viewport.width, onComplete, prefersReducedMotion]);
 
   // Keyboard accessibility
   useEffect(() => {

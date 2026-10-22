@@ -101,6 +101,7 @@ export default function Projects() {
                       height={675}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-amber-500/25 via-slate-900 to-slate-950 p-6 text-center">

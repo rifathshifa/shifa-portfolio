@@ -213,6 +213,7 @@ export default function UIUXShowcase() {
                             alt="Strawberry smoothie"
                             className="w-full h-full object-cover"
                             loading="lazy"
+                            decoding="async"
                           />
                         </div>
                       </div>
@@ -235,6 +236,7 @@ export default function UIUXShowcase() {
                             alt="Guava smoothie"
                             className="w-full h-full object-cover"
                             loading="lazy"
+                            decoding="async"
                           />
                         </div>
                       </div>

@@ -25,60 +25,85 @@ export default function AnimatedBackground({ theme = 'dark' }) {
 
   const isDark = theme === 'dark';
 
-  // 1. Mouse Follow Glow with smooth lerp
+  // 1. Mouse Follow Glow with smooth lerp (pauses when idle or on touch devices)
   useEffect(() => {
-    let animId;
-    const lerpFactor = 0.065;
+    // Skip if coarse pointer (mobile / touch) or reduced motion preferred
+    const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isTouch || prefersReducedMotion) return;
 
-    const onPointerMove = (e) => {
-      mousePos.current.targetX = e.clientX;
-      mousePos.current.targetY = e.clientY;
-      mousePos.current.active = true;
-    };
-
-    const onPointerLeave = () => {
-      mousePos.current.active = false;
-    };
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    document.addEventListener('mouseleave', onPointerLeave);
+    let animId = null;
+    let isRunning = false;
+    const lerpFactor = 0.08;
 
     const updateMouseGlow = () => {
       const pos = mousePos.current;
-      pos.currentX += (pos.targetX - pos.currentX) * lerpFactor;
-      pos.currentY += (pos.targetY - pos.currentY) * lerpFactor;
+      const dx = pos.targetX - pos.currentX;
+      const dy = pos.targetY - pos.currentY;
+
+      pos.currentX += dx * lerpFactor;
+      pos.currentY += dy * lerpFactor;
 
       if (mouseGlowRef.current) {
         mouseGlowRef.current.style.transform = `translate3d(${pos.currentX}px, ${pos.currentY}px, 0)`;
         mouseGlowRef.current.style.opacity = pos.active ? (isDark ? '0.75' : '0.85') : '0.4';
       }
 
-      animId = requestAnimationFrame(updateMouseGlow);
+      // Keep running only while converging; stop when within 0.4px
+      if (Math.abs(dx) > 0.4 || Math.abs(dy) > 0.4) {
+        animId = requestAnimationFrame(updateMouseGlow);
+      } else {
+        isRunning = false;
+      }
     };
 
-    animId = requestAnimationFrame(updateMouseGlow);
+    const onPointerMove = (e) => {
+      mousePos.current.targetX = e.clientX;
+      mousePos.current.targetY = e.clientY;
+      mousePos.current.active = true;
+
+      if (!isRunning && !document.hidden) {
+        isRunning = true;
+        animId = requestAnimationFrame(updateMouseGlow);
+      }
+    };
+
+    const onPointerLeave = () => {
+      mousePos.current.active = false;
+      if (!isRunning && !document.hidden) {
+        isRunning = true;
+        animId = requestAnimationFrame(updateMouseGlow);
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    document.addEventListener('mouseleave', onPointerLeave);
 
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId) cancelAnimationFrame(animId);
       window.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('mouseleave', onPointerLeave);
     };
   }, [isDark]);
 
-  // 2. Tiny Floating Particles Canvas
+  // 2. Tiny Floating Particles Canvas (pauses when offscreen / tab hidden / reduced motion)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const checkReducedMotion = () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (checkReducedMotion()) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId;
+    let animId = null;
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
-
-    const checkReducedMotion = () =>
-      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // Palette of delicate pastel particles
     const particleColorsDark = [
@@ -95,18 +120,19 @@ export default function AnimatedBackground({ theme = 'dark' }) {
       'rgba(224, 200, 165, ', // Warm Cream
     ];
 
-    const particleCount = width < 768 ? 16 : 30;
+    // Lightweight particle count: 10 on mobile, 18 on desktop
+    const particleCount = width < 768 ? 10 : 18;
 
     const createParticle = () => {
       const colors = isDark ? particleColorsDark : particleColorsLight;
       return {
         x: Math.random() * width,
         y: Math.random() * height,
-        radius: Math.random() * 1.6 + 0.8, // 0.8px - 2.4px
+        radius: Math.random() * 1.5 + 0.8,
         colorBase: colors[Math.floor(Math.random() * colors.length)],
-        baseAlpha: Math.random() * 0.35 + 0.15,
-        speedY: -(Math.random() * 0.28 + 0.12), // slow upward drift
-        speedX: (Math.random() - 0.5) * 0.12,
+        baseAlpha: Math.random() * 0.3 + 0.15,
+        speedY: -(Math.random() * 0.22 + 0.1),
+        speedX: (Math.random() - 0.5) * 0.1,
         wobbleSpeed: Math.random() * 0.02 + 0.01,
         wobbleOffset: Math.random() * Math.PI * 2,
         pulseSpeed: Math.random() * 0.025 + 0.01,
@@ -119,53 +145,71 @@ export default function AnimatedBackground({ theme = 'dark' }) {
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      const count = width < 768 ? 16 : 30;
+      const count = width < 768 ? 10 : 18;
       particles = Array.from({ length: count }, createParticle);
     };
 
     window.addEventListener('resize', handleResize);
 
     let time = 0;
+    let isLooping = false;
+
     const render = () => {
+      if (document.hidden || checkReducedMotion()) {
+        isLooping = false;
+        return;
+      }
+
       time += 1;
+      ctx.clearRect(0, 0, width, height);
 
-      if (!document.hidden && !checkReducedMotion()) {
-        ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
 
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
+        p.y += p.speedY;
+        p.x += p.speedX + Math.sin(time * p.wobbleSpeed + p.wobbleOffset) * 0.15;
 
-          // Gentle movement
-          p.y += p.speedY;
-          p.x += p.speedX + Math.sin(time * p.wobbleSpeed + p.wobbleOffset) * 0.18;
-
-          // Respawn at bottom when off screen
-          if (p.y < -10) {
-            p.y = height + 10;
-            p.x = Math.random() * width;
-          }
-          if (p.x < -10) p.x = width + 10;
-          if (p.x > width + 10) p.x = -10;
-
-          // Subtle pulsing opacity
-          const alpha = p.baseAlpha * (0.75 + 0.25 * Math.sin(time * p.pulseSpeed + p.pulseOffset));
-
-          // Draw tiny luminous particle
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `${p.colorBase}${alpha.toFixed(3)})`;
-          ctx.fill();
+        if (p.y < -10) {
+          p.y = height + 10;
+          p.x = Math.random() * width;
         }
+        if (p.x < -10) p.x = width + 10;
+        if (p.x > width + 10) p.x = -10;
+
+        const alpha = p.baseAlpha * (0.75 + 0.25 * Math.sin(time * p.pulseSpeed + p.pulseOffset));
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `${p.colorBase}${alpha.toFixed(3)})`;
+        ctx.fill();
       }
 
       animId = requestAnimationFrame(render);
     };
 
-    animId = requestAnimationFrame(render);
+    const startLoop = () => {
+      if (!isLooping && !document.hidden && !checkReducedMotion()) {
+        isLooping = true;
+        animId = requestAnimationFrame(render);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (animId) cancelAnimationFrame(animId);
+        isLooping = false;
+      } else {
+        startLoop();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    startLoop();
 
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId) cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isDark]);
 

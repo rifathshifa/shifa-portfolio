@@ -8,6 +8,7 @@
   pointer-events: none;
   overflow: hidden;
   z-index: 0;
+  contain: strict;
   transition: opacity 0.5s ease;
 }
 
@@ -16,14 +17,15 @@
   border-radius: 50%;
   pointer-events: none;
   will-change: transform;
-  filter: blur(100px);
-  -webkit-filter: blur(100px);
+  filter: blur(35px);
+  -webkit-filter: blur(35px);
+  transform: translate3d(0, 0, 0);
 }
 
 @media (max-width: 768px) {
   .gradient-orb {
-    filter: blur(75px);
-    -webkit-filter: blur(75px);
+    filter: blur(25px);
+    -webkit-filter: blur(25px);
   }
 }
 
@@ -114,10 +116,16 @@
   margin-left: -300px;
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(90px);
-  -webkit-filter: blur(90px);
+  filter: blur(35px);
+  -webkit-filter: blur(35px);
   will-change: transform, opacity;
   transition: opacity 0.5s ease;
+}
+
+@media (pointer: coarse) {
+  .mouse-glow-orb {
+    display: none !important;
+  }
 }
 
 /* Floating particles canvas */
@@ -133,5 +141,11 @@
 @media (prefers-reduced-motion: reduce) {
   .gradient-orb {
     animation: none !important;
+  }
+  .mouse-glow-orb {
+    display: none !important;
+  }
+  .particles-canvas {
+    display: none !important;
   }
 }

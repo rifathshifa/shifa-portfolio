@@ -24,19 +24,21 @@ export default function Hero({ onOpenResume }) {
         {!reduceMotion ? (
           <video
             src={personalInfo.heroVideo}
+            poster="/images/hero_poster.jpg"
             autoPlay
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             onCanPlay={() => setVideoReady(true)}
             className={`w-full h-full object-cover object-[75%_center] sm:object-[80%_center] scale-105 transform transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
           />
         ) : (
           <img
-            src="/images/novachat.jpg"
-            alt=""
+            src="/images/hero_poster.jpg"
+            alt="Rifath Shifa - Full-Stack Developer & UI/UX Designer"
             aria-hidden="true"
+            decoding="async"
             className="w-full h-full object-cover object-[75%_center]"
           />
         )}
@@ -47,7 +49,7 @@ export default function Hero({ onOpenResume }) {
         <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-slate-950/90 via-slate-950/50 to-transparent pointer-events-none"></div>
 
         {/* Left-to-Right Gradient Mask (heavy veil on left for text, clear on right for face) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 sm:via-slate-950/65 to-transparent pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 sm:via-slate-950/80 to-transparent pointer-events-none"></div>
 
         {/* Bottom finish: keep it dark in BOTH themes so no white fog
             washes over the video. The paper body starts crisply below
