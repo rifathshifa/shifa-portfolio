@@ -1,12 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Eye, FileText } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 
-export default function Hero({ onOpenResume }) {
+export default function Hero({ onOpenResume, isIntroActive = false }) {
   const [reduceMotion] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
   const [videoReady, setVideoReady] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const videoRef = useRef(null);
+
+  // Pause video when out of viewport to preserve battery and performance
+  useEffect(() => {
+    if (reduceMotion || isIntroActive || videoError) return;
+    const video = videoRef.current;
+    if (!video || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [reduceMotion, isIntroActive, videoError]);
 
   const handleScrollToProjects = (e) => {
     e.preventDefault();
@@ -21,8 +44,9 @@ export default function Hero({ onOpenResume }) {
       
       {/* FULL-HEIGHT BACKGROUND VIDEO WITH PRECISE POSITIONING TO KEEP FACE CLEAR */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-[var(--bg-primary)]">
-        {!reduceMotion ? (
+        {!reduceMotion && !videoError && !isIntroActive ? (
           <video
+            ref={videoRef}
             src={personalInfo.heroVideo}
             poster="/images/hero_poster.jpg"
             autoPlay
@@ -31,6 +55,7 @@ export default function Hero({ onOpenResume }) {
             playsInline
             preload="metadata"
             onCanPlay={() => setVideoReady(true)}
+            onError={() => setVideoError(true)}
             className={`w-full h-full object-cover object-[75%_center] sm:object-[80%_center] scale-105 transform transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
           />
         ) : (

@@ -12,7 +12,7 @@ import './AnimatedBackground.css';
  * - Seamless support for both Dark and Light Lavender + Cream themes.
  * - Responsive and performance-optimized (GPU-composited transforms, auto-pause on hidden tab, reduced motion support).
  */
-export default function AnimatedBackground({ theme = 'dark' }) {
+export default function AnimatedBackground({ theme = 'dark', isPaused = false }) {
   const canvasRef = useRef(null);
   const mouseGlowRef = useRef(null);
   const mousePos = useRef({
@@ -25,8 +25,9 @@ export default function AnimatedBackground({ theme = 'dark' }) {
 
   const isDark = theme === 'dark';
 
-  // 1. Mouse Follow Glow with smooth lerp (pauses when idle or on touch devices)
+  // 1. Mouse Follow Glow with smooth lerp (pauses when idle, touch device, or when isPaused)
   useEffect(() => {
+    if (isPaused) return;
     // Skip if coarse pointer (mobile / touch) or reduced motion preferred
     const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
     const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -84,10 +85,11 @@ export default function AnimatedBackground({ theme = 'dark' }) {
       window.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('mouseleave', onPointerLeave);
     };
-  }, [isDark]);
+  }, [isDark, isPaused]);
 
-  // 2. Tiny Floating Particles Canvas (pauses when offscreen / tab hidden / reduced motion)
+  // 2. Tiny Floating Particles Canvas (pauses when isPaused / offscreen / tab hidden / reduced motion)
   useEffect(() => {
+    if (isPaused) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -211,11 +213,11 @@ export default function AnimatedBackground({ theme = 'dark' }) {
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isDark]);
+  }, [isDark, isPaused]);
 
   return (
     <div
-      className="animated-bg-container"
+      className={`animated-bg-container ${isPaused ? 'is-paused' : ''}`}
       aria-hidden="true"
       style={{
         opacity: isDark ? 0.95 : 0.9,

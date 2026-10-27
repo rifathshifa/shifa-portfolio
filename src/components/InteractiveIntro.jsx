@@ -5,27 +5,30 @@ import './InteractiveIntro.css';
 /**
  * InteractiveIntro Component
  *
- * Fullscreen edge-to-edge interactive white curtain covering 100% of the viewport.
- * - Starts with a clean pure white screen and zero text.
+ * Fullscreen edge-to-edge interactive curtain entrance sequence.
+ * - Starts with a clean pure white screen.
  * - An animated hijabi girl walks in from left to right with realistic cloth movement.
- * - She reaches out and grabs the curtain's vertical fold/edge.
- * - The user drags with mouse or touch to pull the curtain sideways.
- * - Curtain deforms like real fabric (catenary curve, vertical pleats gathering, realistic drop shadow).
- * - Underneath, the existing portfolio is progressively unveiled.
- * - When dragged past threshold (>35%), smoothly completes reveal without page reload.
- * - Accessible keyboard navigation (Space / Enter / ArrowRight) and reduced motion support.
+ * - She reaches out and grabs the curtain's seam fold.
+ * - The user can drag sideways with mouse/touch or press Enter/Space/Skip.
+ * - Curtain deforms dynamically with catenary curves and gathering fabric pleats.
+ * - Smoothly unveils the portfolio beneath without layout jumps or page refresh.
+ * - Robust React lifecycle & sessionStorage handling to prevent stuck states,
+ *   blank screens, duplicate triggers, or unexpected replays on route changes.
  */
 export default function InteractiveIntro({ onComplete, isReplay = false }) {
   // Phases: 'init' | 'walking' | 'ready' | 'dragging' | 'revealing' | 'hidden'
   const [phase, setPhase] = useState('init');
   const [walkFrame, setWalkFrame] = useState(1);
-  const [walkX, setWalkX] = useState(-340);
   const [curtainDrag, setCurtainDrag] = useState(0);
   const [pointerY, setPointerY] = useState(null);
-  const [viewport, setViewport] = useState({
+  const [viewport, setViewport] = useState(() => ({
     width: typeof window !== 'undefined' ? window.innerWidth : 1366,
     height: typeof window !== 'undefined' ? window.innerHeight : 768
-  });
+  }));
+
+  // Initial offscreen calculation based on viewport height
+  const initialCharHeight = Math.min((typeof window !== 'undefined' ? window.innerHeight : 768) * 0.78, 680);
+  const [walkX, setWalkX] = useState(-initialCharHeight * 0.95);
 
   const containerRef = useRef(null);
   const dragStartRef = useRef({ x: 0, time: 0 });
@@ -33,64 +36,129 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
   const currentDragRef = useRef(0);
   const animFrameRef = useRef(null);
   const walkIntervalRef = useRef(null);
+  const walkStartedRef = useRef(false);
+  const hasFinishedRef = useRef(false);
 
   // Check prefers-reduced-motion
   const prefersReducedMotion =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Track viewport resizing
+  // Track viewport resizing smoothly
   useEffect(() => {
+    let resizeTimer = null;
     const handleResize = () => {
-      setViewport({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        setViewport({
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+      }, 80);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Preload character assets immediately
   useEffect(() => {
-    const imagesToPreload = [
+    const assets = [
       '/intro/walk_1.webp',
       '/intro/walk_2.webp',
       '/intro/char_grab_clean.webp',
       '/intro/pull.webp'
     ];
-    imagesToPreload.forEach((src) => {
+    assets.forEach((src) => {
       const img = new Image();
       img.src = src;
     });
   }, []);
 
   // Calculate target resting position for character and curtain seam
-  const getPositions = useCallback(() => {
-    const w = viewport.width;
-    if (w < 640) {
-      // Mobile: seam at ~30% of screen width
-      const seamX = Math.round(w * 0.28);
-      // Character's fingertips in char_grab_clean are at ~72.6% of character width
-      // On mobile, character width is ~min(78vh, 480px)
-      return { seamX };
-    } else if (w < 1024) {
-      // Tablet: seam at ~28% of screen width
-      const seamX = Math.round(w * 0.26);
-      return { seamX };
+  const getSeamX = useCallback((width) => {
+    if (width < 640) {
+      return Math.round(width * 0.28);
+    } else if (width < 1024) {
+      return Math.round(width * 0.26);
     } else {
-      // Desktop: seam at ~24% of screen width
-      const seamX = Math.round(w * 0.24);
-      return { seamX };
+      return Math.round(width * 0.24);
     }
-  }, [viewport.width]);
+  }, []);
 
-  // Initiate Walking Animation
+  const seamX = getSeamX(viewport.width);
+  const screenW = viewport.width;
+  const screenH = viewport.height;
+  const charHeight = Math.min(screenH * 0.78, 680);
+  const charWidth = charHeight; // 1:1 aspect ratio
+  const targetCharLeft = seamX - charWidth * 0.72;
+
+  // Complete the reveal transition smoothly
+  const triggerReveal = useCallback(() => {
+    if (phase === 'revealing' || phase === 'hidden' || hasFinishedRef.current) return;
+    hasFinishedRef.current = true;
+
+    // Immediately stop any active walking loop
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
+
+    setPhase('revealing');
+
+    const markSeenAndComplete = () => {
+      setPhase('hidden');
+
+      // Let the container fade out smoothly, then notify parent
+      setTimeout(() => {
+        if (onComplete) onComplete();
+
+        // If URL had a target section hash, scroll to it now
+        if (typeof window !== 'undefined' && window.location.hash) {
+          try {
+            const targetEl = document.querySelector(window.location.hash);
+            if (targetEl) {
+              targetEl.scrollIntoView({ behavior: 'smooth' });
+            }
+          } catch (e) {}
+        }
+      }, 450);
+    };
+
+    if (prefersReducedMotion) {
+      setCurtainDrag(viewport.width + 150);
+      markSeenAndComplete();
+      return;
+    }
+
+    const totalWidth = viewport.width;
+    const startDrag = currentDragRef.current;
+    const targetDrag = totalWidth + 150;
+    const duration = 1400; // ms
+    const startTime = performance.now();
+
+    const animateOut = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Cinematic heavy fabric glide ease-out
+      const ease = 1 - Math.pow(1 - progress, 3.2);
+      const current = startDrag + (targetDrag - startDrag) * ease;
+      setCurtainDrag(current);
+      currentDragRef.current = current;
+
+      if (progress < 1) {
+        requestAnimationFrame(animateOut);
+      } else {
+        markSeenAndComplete();
+      }
+    };
+
+    requestAnimationFrame(animateOut);
+  }, [phase, viewport.width, onComplete, prefersReducedMotion]);
+
+  // Initiate Walking Animation on mount
   useEffect(() => {
-    const { seamX } = getPositions();
-    const charWidth = Math.min(viewport.height * 0.78, 680);
-    // Position where fingertips (72.6% of char width) touch seamX
-    const targetCharLeft = seamX - charWidth * 0.72;
+    let cancelled = false;
 
     if (prefersReducedMotion) {
       setWalkX(targetCharLeft);
@@ -98,24 +166,30 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
       return;
     }
 
-    // Pure white initial state (300ms)
-    const initTimer = setTimeout(() => {
+    const startX = -charWidth * 0.95;
+    setWalkX(startX);
+
+    // Initial brief white pause (120ms) then start walking smoothly
+    const startTimer = setTimeout(() => {
+      if (cancelled) return;
       setPhase('walking');
-      const startX = -charWidth * 0.9;
       const distance = targetCharLeft - startX;
-      const duration = 2500; // ms
+      const duration = 2400; // ms
       const startTime = performance.now();
 
-      // Alternating footsteps cadence
+      // Footsteps cadence
       walkIntervalRef.current = setInterval(() => {
-        setWalkFrame((prev) => (prev === 1 ? 2 : 1));
-      }, 320);
+        if (!cancelled) {
+          setWalkFrame((prev) => (prev === 1 ? 2 : 1));
+        }
+      }, 300);
 
       const step = (now) => {
+        if (cancelled) return;
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        // Smooth ease-out deceleration as she approaches curtain
-        const ease = 1 - Math.pow(1 - progress, 2.4);
+        // Smooth ease-out deceleration as she approaches the curtain seam
+        const ease = 1 - Math.pow(1 - progress, 2.5);
         const currentX = startX + distance * ease;
         setWalkX(currentX);
 
@@ -129,64 +203,20 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
       };
 
       animFrameRef.current = requestAnimationFrame(step);
-    }, 300);
+    }, 120);
 
     return () => {
-      clearTimeout(initTimer);
+      cancelled = true;
+      clearTimeout(startTimer);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (walkIntervalRef.current) clearInterval(walkIntervalRef.current);
     };
-  }, [getPositions, prefersReducedMotion, viewport.height]);
+  }, []);
 
-  // Complete the reveal transition smoothly
-  const triggerReveal = useCallback(() => {
-    if (phase === 'revealing' || phase === 'hidden') return;
-    setPhase('revealing');
-
-    if (prefersReducedMotion) {
-      setCurtainDrag(viewport.width + 150);
-      setPhase('hidden');
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('portfolio_intro_seen', 'true');
-      }
-      if (onComplete) onComplete();
-      return;
-    }
-
-    const totalWidth = viewport.width;
-    const startDrag = currentDragRef.current;
-    const targetDrag = totalWidth + 150;
-    // Slower, smooth, realistic and cinematic opening duration
-    const duration = 1600;
-    const startTime = performance.now();
-
-    const animateOut = (now) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Smooth, cinematic ease-out curve simulating heavy fabric glide
-      const ease = 1 - Math.pow(1 - progress, 3.4);
-      const current = startDrag + (targetDrag - startDrag) * ease;
-      setCurtainDrag(current);
-      currentDragRef.current = current;
-
-      if (progress < 1) {
-        requestAnimationFrame(animateOut);
-      } else {
-        setPhase('hidden');
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('portfolio_intro_seen', 'true');
-        }
-        if (onComplete) onComplete();
-      }
-    };
-
-    requestAnimationFrame(animateOut);
-  }, [phase, viewport.width, onComplete, prefersReducedMotion]);
-
-  // Keyboard accessibility
+  // Keyboard accessibility: Space, Enter, ArrowRight to unveil
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (phase === 'hidden') return;
+      if (phase === 'hidden' || hasFinishedRef.current) return;
       if (
         e.code === 'Space' ||
         e.code === 'Enter' ||
@@ -223,7 +253,6 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
   const handlePointerMove = (e) => {
     if (!isDraggingRef.current) return;
     const deltaX = e.clientX - dragStartRef.current.x;
-    // Allow dragging to the right to open
     const pullAmount = Math.max(0, deltaX);
     currentDragRef.current = pullAmount;
     setCurtainDrag(pullAmount);
@@ -245,20 +274,20 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
     const deltaTime = performance.now() - dragStartRef.current.time;
     const velocity = deltaX / Math.max(deltaTime, 1);
 
-    // Reveal threshold: dragged > 32% of screen OR swift flick
-    const threshold = totalWidth * 0.32;
-    if (deltaX > threshold || velocity > 0.38) {
+    // Unveil threshold: dragged > 30% of screen width OR swift flick
+    const threshold = totalWidth * 0.3;
+    if (deltaX > threshold || velocity > 0.35) {
       triggerReveal();
     } else {
       // Elastic spring back to closed
       const startDrag = currentDragRef.current;
-      const duration = 450;
+      const duration = 400;
       const startTime = performance.now();
 
       const springBack = (now) => {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 2.5);
+        const ease = 1 - Math.pow(1 - progress, 2.6);
         const current = startDrag * (1 - ease);
         setCurtainDrag(current);
         currentDragRef.current = current;
@@ -276,33 +305,25 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
     }
   };
 
-  // Dimensions & Dynamic Geometry for Fullscreen Curtain with ZERO Gaps
-  const screenW = viewport.width;
-  const screenH = viewport.height;
-  const { seamX } = getPositions();
-
-  const charHeight = Math.min(screenH * 0.78, 680);
-  const charWidth = charHeight; // 1:1 aspect ratio
+  // Dimensions & Dynamic Geometry for Fullscreen Curtain
   const activeGripY = pointerY !== null ? pointerY : screenH * 0.52;
 
-  // Catenary fabric curve anchors (zero gaps: extra 50px outside viewport)
-  // When closed (curtainDrag = 0): the curtain covers from 0 to screenW with no gaps
-  // When pulled (curtainDrag > 0): the curtain edge peels open to the right
+  // Catenary fabric curve anchors
   const apexX = seamX + curtainDrag;
   const topX = seamX + curtainDrag * 0.75;
   const bottomX = seamX + curtainDrag * 0.85;
 
-  // Dynamic character position locked to the curtain edge
+  // Dynamic character position: locked to walkX during walk/init, locked to curtain edge once ready
   const charLeft =
-    phase === 'walking'
+    phase === 'walking' || phase === 'init'
       ? walkX
       : apexX - charWidth * 0.72;
 
   const charLean = isDraggingRef.current ? Math.min(curtainDrag * 0.025, 4) : 0;
   const pullProgress = Math.min(curtainDrag / (screenW * 0.75), 1);
 
-  // Generate 10 realistic vertical pleat curves that compress dynamically as curtain folds
-  const numPleats = 10;
+  // Generate 8 realistic vertical pleat curves that compress dynamically as curtain folds
+  const numPleats = 8;
   const remainingWidth = Math.max(20, screenW - apexX);
   const pleatPaths = [];
   for (let i = 1; i <= numPleats; i++) {
@@ -313,13 +334,11 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
     pleatPaths.push({
       id: i,
       d: `M ${pTop} -20 Q ${pApex} ${activeGripY} ${pBottom} ${screenH + 20}`,
-      opacity: (0.15 + (1 - ratio) * 0.22) * (1 + pullProgress * 0.6)
+      opacity: (0.16 + (1 - ratio) * 0.2) * (1 + pullProgress * 0.5)
     });
   }
 
-  // Fullscreen Curtain Surface Path (Edge-to-Edge: covers all 4 corners with -40px to +50px margin)
-  // When closed, covers from left edge (0) to right edge (screenW)
-  // When pulled, the left edge of this path is the curved drape (topX -> apexX -> bottomX)
+  // Fullscreen Curtain Surface Path (Edge-to-Edge)
   const curtainPathData = `
     M ${screenW + 60} -40
     L ${Math.max(-40, topX)} -40
@@ -328,8 +347,7 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
     Z
   `;
 
-  // Left cover veil: before she pulls, keeps the left side 100% pure white
-  // When pulling, it folds away smoothly in sync with the curtain
+  // Left cover veil: before user pulls, keeps the left side 100% white
   const leftCoverPathData = `
     M -40 -40
     L ${Math.max(-40, topX)} -40
@@ -337,6 +355,13 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
     L -40 ${screenH + 40}
     Z
   `;
+
+  // Graceful fallback for image load errors
+  const handleImageError = (e) => {
+    if (e.currentTarget.src.includes('walk')) {
+      e.currentTarget.src = '/intro/char_grab_clean.webp';
+    }
+  };
 
   return (
     <div
@@ -358,14 +383,14 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
       aria-modal="true"
       aria-label="Welcome to Rifath Shifa's Portfolio Intro"
     >
-      {/* 1. DYNAMIC FULLSCREEN SVG CURTAIN LAYER (100% Viewport, Zero Gaps) */}
+      {/* 1. DYNAMIC FULLSCREEN SVG CURTAIN LAYER */}
       <svg
         className="curtain-svg-layer"
         viewBox={`0 0 ${screenW} ${screenH}`}
         preserveAspectRatio="none"
       >
         <defs>
-          {/* Luxurious silk/satin gradient with realistic lighting */}
+          {/* Luxurious silk/satin gradient */}
           <linearGradient id="curtainFabricGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#ffffff" />
             <stop offset="25%" stopColor="#fdfcf9" />
@@ -374,18 +399,11 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
             <stop offset="100%" stopColor="#e3d8c8" />
           </linearGradient>
 
-          {/* Deep cinematic drop shadow cast from the pulled curtain onto portfolio */}
-          <filter id="curtainCinematicShadow" x="-50%" y="-20%" width="200%" height="140%">
-            <feDropShadow dx="-22" dy="0" stdDeviation="28" floodColor="rgba(0, 0, 0, 0.55)" />
-            <feDropShadow dx="-8" dy="0" stdDeviation="12" floodColor="rgba(0, 0, 0, 0.35)" />
-            <feDropShadow dx="-2" dy="0" stdDeviation="4" floodColor="rgba(245, 158, 11, 0.15)" />
+          {/* Efficient, GPU-optimized cinematic drop shadow */}
+          <filter id="curtainCinematicShadow" x="-30%" y="-10%" width="160%" height="120%">
+            <feDropShadow dx="-14" dy="0" stdDeviation="16" floodColor="rgba(0, 0, 0, 0.45)" />
+            <feDropShadow dx="-3" dy="0" stdDeviation="5" floodColor="rgba(245, 158, 11, 0.12)" />
           </filter>
-
-          {/* Soft shadow for vertical pleat grooves */}
-          <linearGradient id="pleatShadowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(168, 148, 126, 0.45)" />
-            <stop offset="100%" stopColor="transparent" />
-          </linearGradient>
         </defs>
 
         {/* The White Curtain Surface Covering 100% of Viewport */}
@@ -395,7 +413,7 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
           filter="url(#curtainCinematicShadow)"
         />
 
-        {/* Dynamic Flowing Fabric Pleats draped from top to bottom */}
+        {/* Flowing Fabric Pleats draped from top to bottom */}
         {phase !== 'init' &&
           pleatPaths.map((p) => (
             <g key={p.id}>
@@ -404,7 +422,7 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
                 d={p.d}
                 fill="none"
                 stroke="rgba(175, 155, 132, 0.32)"
-                strokeWidth={Math.max(6, 16 - pullProgress * 8)}
+                strokeWidth={Math.max(5, 14 - pullProgress * 7)}
                 strokeLinecap="round"
                 opacity={p.opacity}
               />
@@ -413,7 +431,7 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
                 d={p.d}
                 fill="none"
                 stroke="#ffffff"
-                strokeWidth={Math.max(3, 8 - pullProgress * 4)}
+                strokeWidth={Math.max(2.5, 7 - pullProgress * 3.5)}
                 strokeLinecap="round"
                 opacity={p.opacity * 0.85}
               />
@@ -448,7 +466,7 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
             phase === 'dragging'
               ? 'none'
               : phase === 'revealing'
-                ? 'opacity 0.5s ease, transform 0.6s ease'
+                ? 'opacity 0.4s ease, transform 0.5s ease'
                 : 'none',
           opacity: phase === 'revealing' ? 1 - pullProgress : 1
         }}
@@ -456,26 +474,29 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
         {/* Soft ground contact shadow */}
         <div className="character-ground-shadow" />
 
-        {/* Character Illustration with smooth state rendering */}
+        {/* Character Illustration */}
         <div
-          className={`relative w-full h-full ${phase === 'walking' ? 'char-walking-bob' : ''
-            }`}
+          className={`relative w-full h-full ${
+            phase === 'walking' ? 'char-walking-bob' : ''
+          }`}
         >
           {/* Walking Phase: Natural stride cycle */}
-          {phase === 'walking' && (
+          {(phase === 'walking' || phase === 'init') && (
             <img
               src={walkFrame === 1 ? '/intro/walk_1.webp' : '/intro/walk_2.webp'}
               alt="Animated hijabi girl walking gracefully"
+              onError={handleImageError}
               className="w-full h-full object-contain pointer-events-none hijab-cloth-sway"
               draggable="false"
             />
           )}
 
           {/* Ready Phase: Fingertips resting on full-screen curtain edge */}
-          {(phase === 'ready' || phase === 'init') && (
+          {phase === 'ready' && (
             <img
               src="/intro/char_grab_clean.webp"
               alt="Animated hijabi girl holding the curtain edge"
+              onError={handleImageError}
               className="w-full h-full object-contain pointer-events-none hijab-cloth-sway"
               draggable="false"
             />
@@ -486,6 +507,7 @@ export default function InteractiveIntro({ onComplete, isReplay = false }) {
             <img
               src={curtainDrag > 75 ? '/intro/pull.webp' : '/intro/char_grab_clean.webp'}
               alt="Animated hijabi girl pulling the curtain open"
+              onError={handleImageError}
               className="w-full h-full object-contain pointer-events-none"
               draggable="false"
             />

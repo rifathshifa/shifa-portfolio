@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -11,37 +11,60 @@ import Certifications from './components/Certifications';
 import ResumeSection from './components/ResumeSection';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
-import ResumeModal from './components/ResumeModal';
 import InteractiveIntro from './components/InteractiveIntro';
 import AnimatedBackground from './components/AnimatedBackground';
 import useReveal from './hooks/useReveal';
 
+// Code-split modal so initial bundle is lighter
+const ResumeModal = lazy(() => import('./components/ResumeModal'));
+
 export default function App() {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('portfolio_theme');
-      if (saved === 'dark' || saved === 'light') return saved;
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        return 'light';
-      }
+      try {
+        const saved = localStorage.getItem('portfolio_theme');
+        if (saved === 'dark' || saved === 'light') return saved;
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          return 'light';
+        }
+      } catch (e) {}
     }
     return 'dark';
   });
+
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
+
+  // Intro sequence state: plays cleanly when the website is opened or refreshed, respects reduced-motion
   const [showIntro, setShowIntro] = useState(() => {
     if (typeof window !== 'undefined') {
-      if (sessionStorage.getItem('portfolio_intro_seen') === 'true') return false;
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+      try {
+        // Respect user's reduced-motion preference
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          return false;
+        }
+      } catch (e) {
+        return false;
+      }
     }
     return true;
   });
 
   useReveal();
 
+  // Clear any legacy storage flags that previously suppressed the animation on refresh
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem('portfolio_intro_seen');
+      localStorage.removeItem('portfolio_intro_seen');
+    } catch (e) {}
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('portfolio_theme', theme);
+      try {
+        localStorage.setItem('portfolio_theme', theme);
+      } catch (e) {}
     }
   }, [theme]);
 
@@ -49,14 +72,25 @@ export default function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const [introKey, setIntroKey] = useState(0);
+
+  const handleReplayIntro = () => {
+    try {
+      sessionStorage.removeItem('portfolio_intro_seen');
+    } catch (e) {}
+    setIntroKey((prev) => prev + 1);
+    setShowIntro(true);
+  };
+
   return (
     <div className="min-h-screen relative flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
-      {/* Subtle Premium Animated Background (Lavender, Pastel Pink & Cream Orbs + Floating Particles + Mouse Glow) */}
-      <AnimatedBackground theme={theme} />
+      {/* Subtle Premium Animated Background - paused while intro is active to conserve CPU & battery */}
+      <AnimatedBackground theme={theme} isPaused={showIntro} />
 
       {/* Interactive Fullscreen Intro Sequence */}
       {showIntro && (
         <InteractiveIntro
+          key={introKey}
           onComplete={() => setShowIntro(false)}
         />
       )}
@@ -66,12 +100,15 @@ export default function App() {
         theme={theme}
         toggleTheme={toggleTheme}
         onOpenResume={() => setIsResumeModalOpen(true)}
-        onReplayIntro={() => setShowIntro(true)}
+        onReplayIntro={handleReplayIntro}
       />
 
       {/* Main Page Sections */}
       <main className="flex-grow">
-        <Hero onOpenResume={() => setIsResumeModalOpen(true)} />
+        <Hero
+          onOpenResume={() => setIsResumeModalOpen(true)}
+          isIntroActive={showIntro}
+        />
         <About />
         <Skills />
         <Projects />
@@ -86,11 +123,15 @@ export default function App() {
       {/* Footer */}
       <Footer />
 
-      {/* Interactive Resume Viewer Modal */}
-      <ResumeModal
-        isOpen={isResumeModalOpen}
-        onClose={() => setIsResumeModalOpen(false)}
-      />
+      {/* Interactive Resume Viewer Modal (Lazy loaded on demand) */}
+      {isResumeModalOpen && (
+        <Suspense fallback={null}>
+          <ResumeModal
+            isOpen={isResumeModalOpen}
+            onClose={() => setIsResumeModalOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

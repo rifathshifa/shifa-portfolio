@@ -12,20 +12,29 @@
   transition: opacity 0.5s ease;
 }
 
+.animated-bg-container.is-paused {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.animated-bg-container.is-paused .gradient-orb {
+  animation-play-state: paused !important;
+}
+
 .gradient-orb {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
   will-change: transform;
-  filter: blur(35px);
-  -webkit-filter: blur(35px);
+  filter: blur(14px);
+  -webkit-filter: blur(14px);
   transform: translate3d(0, 0, 0);
 }
 
 @media (max-width: 768px) {
   .gradient-orb {
-    filter: blur(25px);
-    -webkit-filter: blur(25px);
+    filter: blur(8px);
+    -webkit-filter: blur(8px);
   }
 }
 
@@ -116,8 +125,8 @@
   margin-left: -300px;
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(35px);
-  -webkit-filter: blur(35px);
+  filter: blur(16px);
+  -webkit-filter: blur(16px);
   will-change: transform, opacity;
   transition: opacity 0.5s ease;
 }
